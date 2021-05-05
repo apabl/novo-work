@@ -41,9 +41,10 @@ class Stream(Record):
             return data
 
 
-class Incrementador(Elaboratable):
+class Sumador(Elaboratable):
     def __init__(self, width):
         self.a = Stream(width, name='a')
+        self.b = Stream(width, name='b')
         self.r = Stream(width, name='r')
 
     def elaborate(self, platform):
@@ -54,12 +55,13 @@ class Incrementador(Elaboratable):
         with m.If(self.r.accepted()):
             sync += self.r.valid.eq(0)
 
-        with m.If(self.a.accepted()):
+        with m.If(self.a.accepted() & self.b.accepted()):
             sync += [
                 self.r.valid.eq(1),
-                self.r.data.eq(self.a.data + 1)
+                self.r.data.eq(self.a.data + self.b.data)
             ]
         comb += self.a.ready.eq((~self.r.valid) | (self.r.accepted()))
+        comb += self.b.ready.eq((~self.r.valid) | (self.r.accepted()))
         return m
 
 
@@ -75,28 +77,32 @@ async def init_test(dut):
 async def burst(dut):
     await init_test(dut)
 
-    stream_input = Stream.Driver(dut.clk, dut, 'a__')
+    stream_input_a = Stream.Driver(dut.clk, dut, 'a__')
+    stream_input_b = Stream.Driver(dut.clk, dut, 'b__')
     stream_output = Stream.Driver(dut.clk, dut, 'r__')
 
     N = 100
     width = len(dut.a__data)
     mask = int('1' * width, 2)
 
-    data = [getrandbits(width) for _ in range(N)]
-    expected = [(d + 1) & mask for d in data]
-    cocotb.fork(stream_input.send(data))
+    a_data = [getrandbits(width) for _ in range(N)]
+    b_data = [getrandbits(width) for _ in range(N)]
+    expected = [(a + b) & mask for a, b in zip(a_data, b_data)]
+    cocotb.fork(stream_input_a.send(a_data))
+    cocotb.fork(stream_input_b.send(b_data))
     recved = await stream_output.recv(N)
-    assert recved == expected
+    assert recved  == expected
 
 
 if __name__ == '__main__':
-    core = Incrementador(5)
+    core = Sumador(5)
     run(
-        core, 'example',
+        core, 'cand_test_ej1',
         ports=
         [
             *list(core.a.fields.values()),
+            *list(core.b.fields.values()),
             *list(core.r.fields.values())
         ],
-        vcd_file='incrementador.vcd'
+        vcd_file='sumador.vcd'
     )

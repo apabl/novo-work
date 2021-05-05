@@ -2,3 +2,4 @@ __pycache__
 *.pyc
 venv
 ej1/incrementador.vcd
+ej1/sumador.vcd

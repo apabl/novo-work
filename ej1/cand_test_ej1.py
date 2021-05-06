@@ -58,7 +58,7 @@ class Sumador(Elaboratable):
         with m.If(self.a.accepted() & self.b.accepted()):
             sync += [
                 self.r.valid.eq(1),
-                self.r.data.eq(self.a.data + self.b.data)
+                self.r.data.eq(self.a.data.as_signed() + self.b.data.as_signed())
             ]
         comb += self.a.ready.eq((~self.r.valid) | (self.r.accepted()))
         comb += self.b.ready.eq((~self.r.valid) | (self.r.accepted()))
@@ -91,7 +91,7 @@ async def burst(dut):
     cocotb.fork(stream_input_a.send(a_data))
     cocotb.fork(stream_input_b.send(b_data))
     recved = await stream_output.recv(N)
-    assert recved  == expected
+    assert recved == expected
 
 
 if __name__ == '__main__':

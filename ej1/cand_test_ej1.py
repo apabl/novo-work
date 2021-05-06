@@ -36,7 +36,7 @@ class Stream(Record):
                 await RisingEdge(self.clk)
                 while self.valid.value == 0:
                     await RisingEdge(self.clk)
-                data.append(self.data.value.integer)
+                data.append((self.data.value.integer, self.valid.value & self.ready.value))
             self.ready <= 0
             return data
 
@@ -87,7 +87,7 @@ async def burst(dut):
 
     a_data = [getrandbits(width) for _ in range(N)]
     b_data = [getrandbits(width) for _ in range(N)]
-    expected = [(a + b) & mask for a, b in zip(a_data, b_data)]
+    expected = [((a + b) & mask, True) for a, b in zip(a_data, b_data)]
     cocotb.fork(stream_input_a.send(a_data))
     cocotb.fork(stream_input_b.send(b_data))
     recved = await stream_output.recv(N)

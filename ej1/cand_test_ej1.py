@@ -60,8 +60,10 @@ class Sumador(Elaboratable):
                 self.r.valid.eq(1),
                 self.r.data.eq(self.a.data.as_signed() + self.b.data.as_signed())
             ]
-        comb += self.a.ready.eq((~self.r.valid) | (self.r.accepted()))
-        comb += self.b.ready.eq((~self.r.valid) | (self.r.accepted()))
+        comb += [
+            self.a.ready.eq((~self.r.valid) | (self.r.accepted())),
+            self.b.ready.eq((~self.r.valid) | (self.r.accepted()))
+        ]
         return m
 
 

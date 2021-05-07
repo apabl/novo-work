@@ -13,7 +13,7 @@ def run():
         file_expected.write(partdata.group(7))
 
     with open('memdump0.mem', 'w') as file_memdump:
-        
+
         for line in partdata.group(4).splitlines():
             file_memdump.write(f"{line[-3:-1]}\n")
 

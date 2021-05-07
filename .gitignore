@@ -3,3 +3,5 @@ __pycache__
 venv
 ej1/incrementador.vcd
 ej1/sumador.vcd
+ej2/expected_ej2.v
+ej2/memdump0.mem
